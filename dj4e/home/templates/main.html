@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Hello World</h1
+<p>
+{% if user.is_authenticated %}
+<ul>
+    <li>Try <a href="autos">Autos Crud</a></li>
+    <li><a href="/cats">Cats CRUD</a>
+</ul>
+<p><a href="{% url 'logout'%}?next={{request.path}}">Logout</a></p>
+{% else %}
+<p><a href="{% url 'login'%}?next={{request.path}}">Please log in</a></p>
+{% endif %}
+</p>
+{% endblock %}
