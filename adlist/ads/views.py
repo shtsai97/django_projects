@@ -29,7 +29,9 @@ class AdDetailView(AdsDetailView):
         return render(request, self.template_name, context)
 
 class AdCreateView(AdsCreateView):
+    model = Ad
     template_name = "ad_form.html"
+    fileds = ['title', 'price', 'text']
     success_url = reverse_lazy('ads')
     def get(self, request, pk=None) :
         form = CreateForm()
@@ -49,24 +51,29 @@ class AdCreateView(AdsCreateView):
         ad.save()
         return redirect(self.success_url)
 
-class AdUpdateView(AdsUpdateView):
-    template_name = "ad_form.html"
+
+
+class AdUpadteView(AdsUpdateView):
+    model = Ad
+    fields = ['title', 'price', 'text']
+
+    template = 'ad_form.html'
     success_url = reverse_lazy('ads')
     def get(self, request, pk) :
-        pic = get_object_or_404(Ad, id=pk, owner=self.request.user)
-        form = CreateForm(instance=pic)
+        ad = get_object_or_404(Ad, id=pk, owner=self.request.user)
+        form = CreateForm(instance=ad)
         ctx = { 'form': form }
         return render(request, self.template, ctx)
 
     def post(self, request, pk=None) :
-        pic = get_object_or_404(Ad, id=pk, owner=self.request.user)
-        form = CreateForm(request.POST, request.FILES or None, instance=pic)
+        ad = get_object_or_404(Ad, id=pk, owner=self.request.user)
+        form = CreateForm(request.POST, request.FILES or None, instance=ad)
 
         if not form.is_valid() :
             ctx = {'form' : form}
             return render(request, self.template, ctx)
 
-        pic.save()
+        ad.save()
         return redirect(self.success_url)
 
 class AdDeleteView(AdsDeleteView):
@@ -74,11 +81,11 @@ class AdDeleteView(AdsDeleteView):
     template_name = "ad_delete.html"
 
 def stream_file(request, pk) :
-    pic = get_object_or_404(Ad, id=pk)
+    ad = get_object_or_404(Ad, id=pk)
     response = HttpResponse()
-    response['Content-Type'] = pic.content_type
-    response['Content-Length'] = len(pic.picture)
-    response.write(pic.picture)
+    response['Content-Type'] = ad.content_type
+    response['Content-Length'] = len(ad.picture)
+    response.write(ad.picture)
     return response
 
 class AdFormView(LoginRequiredMixin, View):
@@ -88,8 +95,8 @@ class AdFormView(LoginRequiredMixin, View):
         if not pk :
             form = CreateForm()
         else:
-            pic = get_object_or_404(Ad, id=pk, owner=self.request.user)
-            form = CreateForm(instance=pic)
+            ad = get_object_or_404(Ad, id=pk, owner=self.request.user)
+            form = CreateForm(instance=ad)
         ctx = { 'form': form }
         return render(request, self.template, ctx)
 
@@ -97,16 +104,33 @@ class AdFormView(LoginRequiredMixin, View):
         if not pk:
             form = CreateForm(request.POST, request.FILES or None)
         else:
-            pic = get_object_or_404(Ad, id=pk, owner=self.request.user)
-            form = CreateForm(request.POST, request.FILES or None, instance=pic)
+            ad = get_object_or_404(Ad, id=pk, owner=self.request.user)
+            form = CreateForm(request.POST, request.FILES or None, instance=ad)
 
         if not form.is_valid() :
             ctx = {'form' : form}
             return render(request, self.template, ctx)
 
         # Adjust the model owner before saving
-        pic = form.save(commit=False)
-        pic.owner = self.request.user
-        pic.save()
+        ad = form.save(commit=False)
+        ad.owner = self.request.user
+        ad.save()
         return redirect(self.success_url)
 
+class CommentCreateView(LoginRequiredMixin, View):
+    def post(self, request, pk) :
+        f = get_object_or_404(Ad, id=pk)
+        comment_form = CommentForm(request.POST)
+
+        comment = Comment(text=request.POST['comment'], owner=request.user, ad=f)
+        comment.save()
+        return redirect(reverse_lazy('ad_detail', args=[pk]))
+
+class CommentDeleteView(AdsDeleteView):
+    model = Comment
+    template_name = "comment_delete.html"
+
+    # https://stackoverflow.com/questions/26290415/deleteview-with-a-dynamic-success-url-dependent-on-id
+    def get_success_url(self):
+        ad = self.object.ad
+        return reverse_lazy('ad_detail', args=[ad.id])
