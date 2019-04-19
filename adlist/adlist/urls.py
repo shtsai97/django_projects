@@ -1,4 +1,5 @@
 """adlist URL Configuration
+
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/2.1/topics/http/urls/
 Examples:
@@ -20,13 +21,16 @@ from django.conf.urls import url
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
-    path('', include('ads.urls')),
-    path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')),
-    path('ads/', include('ads.urls')),  # Keep
+    path('', include('ads.urls')),  # Keep
+    path('admin/', admin.site.urls),  # Keep
+    path('accounts/', include('django.contrib.auth.urls')),  # Keep
+    path('autos/', include('autos.urls')),
+    path('cats/', include('cats.urls')),
+    path('stars/', include('stars.urls')),
 ]
 
 # Keep everything below this line
+
 if 'social_django' in settings.INSTALLED_APPS :
     urlpatterns += [
         url(r'^oauth/', include('social_django.urls', namespace='social')),

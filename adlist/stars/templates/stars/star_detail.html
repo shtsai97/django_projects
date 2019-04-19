@@ -1,0 +1,47 @@
+{% extends "stars/base_menu.html" %}
+{% load crispy_forms_tags %}
+{% load humanize %} <!-- https://docs.djangoproject.com/en/2.1/ref/contrib/humanize -->
+{% block content %}
+<span style="float: right;">
+({{ star.updated_at|naturaltime }})
+{% if star.owner == user %}
+<a href="{% url 'star_update' star.id %}"><i class="fa fa-pencil"></i></a>
+<a href="{% url 'star_delete' star.id %}"><i class="fa fa-trash"></i></a>
+{% endif %}
+</span>
+<h1>{{ star.name }}</h1>
+<p>
+Distance: {{ star.distance }}
+</p>
+<p>
+Diameter: {{ star.diameter }} mile
+</p>
+<p>
+</p>
+<p>
+</p>
+<p>
+</p>
+{% if user.is_authenticated %}
+<br clear="all"/>
+<p>
+<form method="post" action="{% url 'comment_create' star.id %}">
+    {% csrf_token %}
+    {{ comment_form|crispy }}
+<input type="submit" value="Submit">
+<input type="submit" value="All Stars" onclick="window.location.href='{% url 'stars' %}';return false;">
+</form>
+</p>
+{% endif %}
+{% for comment in comments %}
+<p> {{ comment.text }}
+({{ comment.updated_at|naturaltime }})
+{% if user == comment.owner %}
+<a href="{% url 'comment_delete' comment.id %}"><i class="fa fa-trash"></i></a>
+{% endif %}
+</p>
+{% endfor %}
+<p>
+<a href="{% url 'stars' %}">All ads</a>
+</p>
+{% endblock %}
